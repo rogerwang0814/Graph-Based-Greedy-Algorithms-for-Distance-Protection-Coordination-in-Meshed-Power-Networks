@@ -141,7 +141,7 @@ signed main(){
 	*/
 	//return 0;
 	int delct=0;
-	cout<<loops.size()<<"\n";
+	//cout<<loops.size()<<"\n";
 	now.clear();
 	while (delct<(int)loops.size()){
 		int mx=0,ind=0;
