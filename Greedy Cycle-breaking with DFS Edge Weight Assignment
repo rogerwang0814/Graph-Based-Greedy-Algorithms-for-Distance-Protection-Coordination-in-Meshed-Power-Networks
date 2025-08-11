@@ -1,0 +1,214 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+struct dedge{
+	int l,r;
+	double val;
+} es[200010];
+
+vector<int> e[20010];
+bool vis[20010],ban[20010];
+vector<vector<int> > loops;
+vector<int> add,exs;
+int cnt[20010];
+
+void dfsl(int pos,int rng){
+	if (pos==rng && add.size()>0){
+		if (add.size()>2 && add.size()<=8){
+			loops.push_back(add);
+			exs.push_back(0);
+		}
+		return;
+	}
+	vis[pos]=1;
+	if (add.size()>=8){
+		vis[pos]=0;
+		return;
+	}
+	for (auto x:e[pos]){
+		if (es[x].r>=rng && (es[x].r==rng || !vis[es[x].r])){
+			add.push_back(x);
+			dfsl(es[x].r,rng);
+			add.pop_back();
+		}
+	}
+	vis[pos]=0;
+	return;
+}
+
+void dfsr(int pos,int from){
+	if (add.size()==7){
+		loops.push_back(add);
+		exs.push_back(0);
+		return;
+	}
+	vis[pos]=1;
+	for (auto x:e[pos]){
+		if (!vis[es[x].r]){
+			if (pos!=from) add.push_back(x);
+			dfsr(es[x].r,from);
+			if (pos!=from) add.pop_back();
+		}
+	}
+	vis[pos]=0;
+}
+
+
+void dfsv(int pos,double vl,int from){
+	if (vl<0.6) return;
+	for (auto x:e[pos]){
+		bool got=0;
+		if ((from==-1 || x-1!=((from-1)^1)) && (es[x].val>vl || es[x].val==0) && !ban[x]){
+			es[x].val=vl;got=1;
+		}
+		if (!ban[x] && got) dfsv(es[x].r,vl-0.2,x);
+	}
+}
+
+vector<int> now;
+int n,m;
+
+/*
+vector<int> dfsc(int delct,int szl){
+	if (delct==szl) return now;
+	int cnt[m*2+5]={};
+	int mx=0;
+	for (int i=1;i<=m*2;i++){
+		cnt[i]=0;
+	}
+	for (int i=0;i<szl;i++){
+		if (exs[i]==1) continue;
+		for (auto y:loops[i]) if (!ban[y]) cnt[y]++;
+	}
+	for (int i=1;i<=m*2;i++){
+		if (cnt[i]>mx){
+			mx=cnt[i];
+		}
+	}
+	vector<int> ret;ret.clear();
+	//cout<<delct<<"\n";
+	//for (int i=1;i<=m*2;i++) cout<<cnt[i]<<' ';
+	//cout<<"\n";
+	for (int k=1;k<=m*2;k++){
+		if (cnt[k]!=mx) continue;
+		ban[k]=1;
+		int dt=delct;
+		vector<int> tgt;
+		for (int i=0;i<szl;i++){
+			if (exs[i]==1) continue;
+			for (auto x:loops[i]) if (x==k){
+				tgt.push_back(i);
+				exs[i]=1;dt++;break;
+			}
+		}
+		//cout<<dt<<' '<<k<<"\n";
+		vector<int> got=dfsc(dt,szl);
+		got.push_back(k);
+		if (ret.size()==0 || ret.size()>got.size()) ret=got;
+		ban[k]=0;
+		for (auto x:tgt) exs[x]=0;
+	}
+	return ret;
+}*/
+
+signed main(){
+	cin>>n>>m;
+	for (int i=1;i<=m;i++){
+		int a,b;cin>>a>>b;
+		e[a].push_back(i*2-1);e[b].push_back(i*2);
+		es[i*2-1].l=a;es[i*2-1].r=b;es[i*2-1].val=0;
+		es[i*2].r=a;es[i*2].l=b;es[i*2].val=0;
+	}
+	add.clear();
+	for (int i=1;i<=n;i++){
+		add.clear();
+		for (int i=1;i<=n;i++) vis[i]=0;
+		dfsl(i,i);
+	}
+	for (int i=1;i<=n;i++){
+		add.clear();
+		for (int i=1;i<=n;i++) vis[i]=0;
+		dfsr(i,i);
+	}
+	int szl=loops.size();
+	/*
+	for (auto x:loops) {
+		if (x[0]==1) {
+			for (auto y:x) cout<<y<<' ';
+			cout<<"\n";
+		}
+	}
+	*/
+	//return 0;
+	int delct=0;
+	cout<<loops.size()<<"\n";
+	now.clear();
+	while (delct<(int)loops.size()){
+		int mx=0,ind=0;
+		for (int i=1;i<=m*2;i++){
+			cnt[i]=0;
+		}
+		for (int i=0;i<szl;i++){
+			if (exs[i]==1) continue;
+			for (auto y:loops[i]) cnt[y]++;
+		}
+		for (int i=1;i<=m*2;i++){
+			if (cnt[i]>mx){
+				mx=cnt[i];ind=i;
+			}
+		}
+		ban[ind]=1;
+		for (int i=0;i<szl;i++){
+			if (exs[i]==1) continue;
+			for (auto x:loops[i]) if (x==ind){
+				exs[i]=1;delct++;break;
+			}
+		}
+	}
+	//for (auto x:got) ban[x]=1;
+	int cnt=0;
+	for (int i=1;i<=m*2;i++){
+		if (ban[i]){
+			cnt++;
+			es[i].val=1.8;
+		}
+	}
+	cout<<cnt<<"\n";
+	//for (int i=1;i<=m*2;i++) if (ban[i]) cout<<es[i].l<<' '<<es[i].r<<"\n";
+	//cout<<"\n";
+	//return 0;
+	for (int i=1;i<=m*2;i++){
+		if (ban[i]){
+			for (int j=1;j<=n;j++) vis[j]=0;
+			//cout<<i<<"\n";
+			dfsv(es[i].r,1.6,i);
+		}
+	}
+	//cout<<e[22].size()<<"\n";
+	for (int i=1;i<=n;i++){
+		if (e[i].size()==1) dfsv(i,1.8,-1);
+	}
+	double mn=1e9;
+	for (int j=1;j<=m*2;j++){
+		mn=min(es[j].val,mn);
+	}
+	mn-=0.6;mn=max(0.0,mn);
+	int now[3]={};
+	for (int i=1;i<=m*2;i++){
+		bool t0=0,t1=1;
+		for (int j=1;j<=m*2;j++){
+			if (es[j].r==es[i].l && es[j].l!=es[i].r){
+				if (es[j].val>=es[i].val+0.1) t0=1;
+				else t1=0;
+			}
+		}
+		if (t0==1 && t1==1) now[0]++;
+		else if (t0==1 && t1==0) now[1]++;
+		else now[2]++;
+	}
+	cout<<now[0]<<' '<<now[1]<<' '<<now[2]<<"\n";
+	for (int i=1;i<=m*2;i++){
+		es[i].val-=mn;
+		cout<<es[i].l<<' '<<es[i].r<<' '<<es[i].val<<"\n";
+	}
+}
